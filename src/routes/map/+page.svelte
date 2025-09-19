@@ -119,7 +119,7 @@
 <DreamBackground />
 
 <div class="relative min-h-screen w-full overflow-hidden">
-	<div class="absolute inset-0 z-10 p-4 text-center">
+	<div class="absolute top-0 left-0 right-0 z-10 p-4 text-center pointer-events-none">
 		<h1 class="mb-2 text-4xl font-bold text-white">Dream World Map</h1>
 		<p class="mb-8 text-indigo-200">Explore the dreamscape...</p>
 	</div>

@@ -70,8 +70,8 @@
 			class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-gradient-to-b from-indigo-900 to-indigo-900/70 p-6 shadow-2xl backdrop-blur-lg"
 			on:click={handleContentClick}
 			on:keydown={(e) => e.stopPropagation()}
-			role="document"
-			tabindex="0"
+			role="dialog"
+			tabindex="-1"
 		>
 			<!-- Close button -->
 			<button

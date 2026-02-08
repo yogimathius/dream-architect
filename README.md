@@ -1,62 +1,36 @@
-# sv
+# Dream Architect
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Dream Architect is a project in this workspace; this README summarizes its current direction based on repository evidence.
 
-## Creating a project
+## Scope and Direction
+- Project path: `_archive/dream-architect`
+- Primary tech profile: Node.js/TypeScript or JavaScript
+- Audit date: `2026-02-08`
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Current Status
-
-- SvelteKit scaffold with project planning docs.
-- No clear product features implemented yet.
-- Operational estimate: **15%** (template + planning).
-
-## Archive Rationale
-
-- Archived because it appears to be a baseline scaffold without substantial implementation.
+## What Appears Implemented
+- Detected major components: `src/`
+- No clear API/controller routing signals were detected at this scope
+- Root `package.json` defines development/build automation scripts
 
 ## API Endpoints
+- No explicit HTTP endpoint definitions were detected at the project root scope
 
-- None. This is currently a frontend scaffold.
+## Testing Status
+- `test:unit` script available in root `package.json`
+- `test` script available in root `package.json`
+- `test:e2e` script available in root `package.json`
+- Re-run in this session:
+- `pnpm test:unit -- --run` failed (`1` failed, `23` passed), with a failing click-target assertion in `src/lib/components/DreamEventOverlay.test.ts`.
 
-## Tests
+## Operational Assessment
+- Estimated operational coverage: **25%**
+- Confidence level: **medium**
 
-- No test suite detected.
+## Bucket Rationale
+- This project sits in `_archive`, indicating it is intentionally preserved while active delivery focus shifted elsewhere.
 
 ## Future Work
-
-- Define product scope and build core screens.
-- Add backend integration (if required).
-- Establish testing and deployment workflow.
+- Document and stabilize the external interface (CLI, API, or protocol) with explicit examples
+- Fix current failing unit test and stabilize test reliability before archive reconsideration
+- Validate runtime claims in this README against current behavior and deployment configuration
+- Keep archived unless a specific owner, scope, and reactivation milestone are assigned

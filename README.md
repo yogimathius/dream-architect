@@ -36,3 +36,27 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+## Current Status
+
+- SvelteKit scaffold with project planning docs.
+- No clear product features implemented yet.
+- Operational estimate: **15%** (template + planning).
+
+## Archive Rationale
+
+- Archived because it appears to be a baseline scaffold without substantial implementation.
+
+## API Endpoints
+
+- None. This is currently a frontend scaffold.
+
+## Tests
+
+- No test suite detected.
+
+## Future Work
+
+- Define product scope and build core screens.
+- Add backend integration (if required).
+- Establish testing and deployment workflow.

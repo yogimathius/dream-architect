@@ -11,7 +11,8 @@ vi.mock('gsap', () => ({
 		set: vi.fn(),
 		timeline: vi.fn(() => ({
 			to: vi.fn().mockReturnThis(),
-			call: vi.fn().mockReturnThis()
+			call: vi.fn().mockReturnThis(),
+			kill: vi.fn()
 		}))
 	}
 }));
@@ -75,5 +76,34 @@ describe('DreamNode Component', () => {
 
 		// Assert
 		expect(mockOnClick).toHaveBeenCalledWith('1', mockPosition);
+	});
+
+	it('plays the unlock reveal animation when isRecentlyUnlocked flips to true after mount', async () => {
+		// Arrange: a node that was NOT recently unlocked when it first mounted (the normal
+		// case — it only becomes "recently unlocked" later, mid-session, when a choice
+		// elsewhere unlocks it).
+		const { rerender } = render(DreamNode, {
+			dream: mockDream,
+			position: mockPosition,
+			index: mockIndex,
+			isActive: false,
+			onClick: mockOnClick,
+			isRecentlyUnlocked: false
+		});
+
+		await new Promise((resolve) => setTimeout(resolve, 200));
+
+		const { gsap } = await import('gsap');
+		const timelineCallsBeforeUnlock = (gsap.timeline as ReturnType<typeof vi.fn>).mock.calls
+			.length;
+
+		// Act: the prop flips true, as it would when the parent's unlocked-dreams store updates.
+		await rerender({ isRecentlyUnlocked: true });
+
+		// Assert: the reveal animation (a GSAP timeline) actually plays in response, rather
+		// than only being checked once inside the component's initial onMount.
+		expect((gsap.timeline as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(
+			timelineCallsBeforeUnlock
+		);
 	});
 });

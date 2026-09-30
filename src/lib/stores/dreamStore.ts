@@ -3,9 +3,31 @@ import { dreams as initialDreams } from '$lib/data/dreams';
 import type { Dream } from '$lib/data/dreams';
 import { tweened } from 'svelte/motion';
 import { cubicOut } from 'svelte/easing';
+import { PROGRESS_STORAGE_KEY, applyUnlockedIds, collectUnlockedIds } from './progress';
+
+// Progress previously reset on every page reload — nothing wrote unlocked-dream state anywhere.
+// Restore from localStorage on load (browser only; SSR/tests get the fresh, all-default data).
+function loadInitialDreams(): Dream[] {
+	if (typeof localStorage === 'undefined') return initialDreams;
+	try {
+		const raw = localStorage.getItem(PROGRESS_STORAGE_KEY);
+		if (!raw) return initialDreams;
+		const unlockedIds: unknown = JSON.parse(raw);
+		if (!Array.isArray(unlockedIds)) return initialDreams;
+		return applyUnlockedIds(initialDreams, unlockedIds as string[]);
+	} catch {
+		return initialDreams;
+	}
+}
 
 // Create a writable store with the initial dreams data
-export const dreamStore = writable<Dream[]>(initialDreams);
+export const dreamStore = writable<Dream[]>(loadInitialDreams());
+
+if (typeof localStorage !== 'undefined') {
+	dreamStore.subscribe((dreams) => {
+		localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(collectUnlockedIds(dreams)));
+	});
+}
 
 // Create a store for the active dream (currently being viewed)
 export const activeDreamId = writable<string | null>(null);

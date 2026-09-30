@@ -118,4 +118,22 @@ describe('DreamEventOverlay Component', () => {
 		// Assert
 		expect(mockOnClose).not.toHaveBeenCalled();
 	});
+
+	it('reports the chosen choice and closes the overlay when a choice is clicked', async () => {
+		// Arrange
+		const mockOnChoiceSelected = vi.fn();
+		const { container } = render(DreamEventOverlay, {
+			dream: mockDream,
+			onClose: mockOnClose,
+			onChoiceSelected: mockOnChoiceSelected
+		});
+
+		// Act: the second choice ("Choice 2") is the one that unlocks dream "2".
+		const choiceButtons = container.querySelectorAll('button.w-full.text-left');
+		await fireEvent.click(choiceButtons[1]);
+
+		// Assert
+		expect(mockOnChoiceSelected).toHaveBeenCalledWith(mockDream.choices[1]);
+		expect(mockOnClose).toHaveBeenCalled();
+	});
 });

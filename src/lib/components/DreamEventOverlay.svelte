@@ -7,6 +7,7 @@
 
 	export let dream: Dream | null = null;
 	export let onClose: () => void;
+	export let onChoiceSelected: (choice: Choice) => void = () => {};
 
 	let mainContent: HTMLDivElement;
 	let backgroundEl: HTMLDivElement;
@@ -29,9 +30,8 @@
 	});
 
 	function handleChoice(choice: Choice) {
-		// In a full implementation, this would handle the choice selection
-		// For now, we'll just log it
-		console.log('Selected choice:', choice);
+		onChoiceSelected(choice);
+		onClose();
 	}
 
 	function handleOverlayKeydown(e: KeyboardEvent) {
@@ -70,7 +70,7 @@
 			class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-gradient-to-b from-indigo-900 to-indigo-900/70 p-6 shadow-2xl backdrop-blur-lg"
 			on:click={handleContentClick}
 			on:keydown={(e) => e.stopPropagation()}
-			role="dialog"
+			role="document"
 			tabindex="-1"
 		>
 			<!-- Close button -->

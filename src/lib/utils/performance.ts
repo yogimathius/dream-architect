@@ -21,6 +21,39 @@ interface WebVitals {
   TTFB?: number; // Time to First Byte
 }
 
+/**
+ * Pure Web Vitals scoring, extracted out of PerformanceMonitor so it's testable without a DOM —
+ * the class itself starts observers as a side effect of construction, which made this logic
+ * untestable in isolation despite being the one number (`getPerformanceScore()`) meant to
+ * summarize whether a session's performance was actually good.
+ */
+export function computeWebVitalsScore(vitals: WebVitals): number {
+  const { LCP, FID, CLS, FCP } = vitals;
+  let score = 100;
+
+  if (LCP !== undefined) {
+    if (LCP > 4000) score -= 25; // Poor
+    else if (LCP > 2500) score -= 10; // Needs improvement
+  }
+
+  if (FID !== undefined) {
+    if (FID > 300) score -= 25; // Poor
+    else if (FID > 100) score -= 10; // Needs improvement
+  }
+
+  if (CLS !== undefined) {
+    if (CLS > 0.25) score -= 25; // Poor
+    else if (CLS > 0.1) score -= 10; // Needs improvement
+  }
+
+  if (FCP !== undefined) {
+    if (FCP > 3000) score -= 15; // Poor
+    else if (FCP > 1800) score -= 5; // Needs improvement
+  }
+
+  return Math.max(0, score);
+}
+
 class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private webVitals: WebVitals = {};
@@ -104,13 +137,13 @@ class PerformanceMonitor {
             this.webVitals.TTFB = navigation.responseStart - navigation.requestStart;
             this.reportMetric('TTFB', this.webVitals.TTFB);
 
-            // Page load time
-            const loadTime = navigation.loadEventEnd - navigation.navigationStart;
-            this.reportMetric('PageLoad', loadTime);
+            // Page load time — PerformanceNavigationTiming timestamps are already
+            // relative to the navigation start (unlike the old performance.timing API),
+            // so no subtraction is needed here.
+            this.reportMetric('PageLoad', navigation.loadEventEnd);
 
             // DOM content loaded
-            const domContentLoaded = navigation.domContentLoadedEventEnd - navigation.navigationStart;
-            this.reportMetric('DOMContentLoaded', domContentLoaded);
+            this.reportMetric('DOMContentLoaded', navigation.domContentLoadedEventEnd);
           }
         }, 0);
       });
@@ -142,7 +175,8 @@ class PerformanceMonitor {
     // Example: Send to Google Analytics, DataDog, New Relic, etc.
     // Replace with your actual analytics service
     try {
-      if (typeof gtag !== 'undefined') {
+      const gtag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
+      if (typeof gtag === 'function') {
         gtag('event', 'performance_metric', {
           custom_map: { metric_name: 'dimension1' },
           metric_name: metric.name,
@@ -203,31 +237,7 @@ class PerformanceMonitor {
   }
 
   public getPerformanceScore(): number {
-    const { LCP, FID, CLS, FCP } = this.webVitals;
-    let score = 100;
-
-    // Scoring based on Web Vitals thresholds
-    if (LCP !== undefined) {
-      if (LCP > 4000) score -= 25; // Poor
-      else if (LCP > 2500) score -= 10; // Needs improvement
-    }
-
-    if (FID !== undefined) {
-      if (FID > 300) score -= 25; // Poor
-      else if (FID > 100) score -= 10; // Needs improvement
-    }
-
-    if (CLS !== undefined) {
-      if (CLS > 0.25) score -= 25; // Poor
-      else if (CLS > 0.1) score -= 10; // Needs improvement
-    }
-
-    if (FCP !== undefined) {
-      if (FCP > 3000) score -= 15; // Poor
-      else if (FCP > 1800) score -= 5; // Needs improvement
-    }
-
-    return Math.max(0, score);
+    return computeWebVitalsScore(this.webVitals);
   }
 
   public cleanup() {

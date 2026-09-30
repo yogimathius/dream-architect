@@ -17,6 +17,7 @@
 	let pulseAnimation: gsap.core.Tween | null = null;
 	let unlockAnimation: gsap.core.Timeline | null = null;
 	let hoverActive = false;
+	let hasPlayedUnlockAnimation = false;
 
 	// Different colors for each node type
 	const colors = [
@@ -138,25 +139,23 @@
 		setTimeout(() => {
 			isVisible = true;
 
-			if (nodeElement) {
-				if (isRecentlyUnlocked) {
-					// This is a newly unlocked dream, show special animation
-					createUnlockAnimation();
-				} else {
-					// Normal node appearance
-					gsap.from(nodeElement, {
-						scale: 0.5,
-						opacity: 0,
-						duration: 0.7,
-						delay: index * 0.15,
-						ease: 'back.out(1.7)',
-						onComplete: () => {
-							if (!dream.locked) {
-								startPulseAnimation();
-							}
+			// The reveal animation for an already-unlocked node is handled by the
+			// `isRecentlyUnlocked` reactive block below (it also covers a node unlocking
+			// later, mid-session, which is the common case this component needs to support).
+			if (nodeElement && !isRecentlyUnlocked) {
+				// Normal node appearance
+				gsap.from(nodeElement, {
+					scale: 0.5,
+					opacity: 0,
+					duration: 0.7,
+					delay: index * 0.15,
+					ease: 'back.out(1.7)',
+					onComplete: () => {
+						if (!dream.locked) {
+							startPulseAnimation();
 						}
-					});
-				}
+					}
+				});
 			}
 		}, 100);
 	});
@@ -166,6 +165,17 @@
 		if (pulseAnimation) pulseAnimation.kill();
 		if (unlockAnimation) unlockAnimation.kill();
 	});
+
+	// Play the reveal animation whenever this node newly becomes unlocked, not just when it
+	// happens to already be unlocked at initial mount (the common case: a dream unlocks mid-
+	// session, well after its DreamNode instance was created).
+	$: if (isRecentlyUnlocked && nodeElement && isVisible && !hasPlayedUnlockAnimation) {
+		hasPlayedUnlockAnimation = true;
+		createUnlockAnimation();
+	}
+	$: if (!isRecentlyUnlocked) {
+		hasPlayedUnlockAnimation = false;
+	}
 
 	// Active state
 	$: if (isActive && nodeElement && !hoverActive) {

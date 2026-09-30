@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { Dream } from '$lib/data/dreams';
+	import type { Dream, Choice } from '$lib/data/dreams';
 	import PlayerMarker from '$lib/components/PlayerMarker.svelte';
 	import DreamNode from '$lib/components/DreamNode.svelte';
 	import DreamEventOverlay from '$lib/components/DreamEventOverlay.svelte';
 	import DreamBackground from '$lib/components/DreamBackground.svelte';
+	import DreamProgress from '$lib/components/DreamProgress.svelte';
+	import { recentlyUnlockedDreams } from '$lib/stores/dreamStore';
 
 	export let data: { dreams: Dream[] };
 
@@ -13,6 +15,9 @@
 	let isPlayerMoving = false;
 	let activeDreamId: string | null = null;
 	let selectedDream: Dream | null = null;
+
+	// Story progression: dreams the player has actually opened, not merely unlocked.
+	let visitedDreamIds = new Set<string>();
 
 	// Map state
 	let dreamNodes: { dream: Dream; position: { x: number; y: number } }[] = [];
@@ -49,12 +54,32 @@
 		setTimeout(() => {
 			isPlayerMoving = false;
 			selectedDream = data.dreams.find((d) => d.id === id) || null;
+			visitedDreamIds = new Set(visitedDreamIds).add(id);
 		}, 1000);
 	}
 
 	// Close the dream overlay
 	function closeDreamEvent() {
 		selectedDream = null;
+	}
+
+	// Unlock whichever dreams this choice points to, so their nodes become reachable.
+	function handleChoiceSelected(choice: Choice) {
+		if (choice.unlocks.length === 0) return;
+
+		const newlyUnlocked: string[] = [];
+		dreamNodes = dreamNodes.map((node) => {
+			if (choice.unlocks.includes(node.dream.id) && node.dream.locked) {
+				newlyUnlocked.push(node.dream.id);
+				return { ...node, dream: { ...node.dream, locked: false } };
+			}
+			return node;
+		});
+
+		if (newlyUnlocked.length > 0) {
+			// DreamNode reads this same store to trigger its unlock reveal animation.
+			recentlyUnlockedDreams.update((ids) => [...ids, ...newlyUnlocked]);
+		}
 	}
 
 	// Initialize map on mount
@@ -121,7 +146,8 @@
 <div class="relative min-h-screen w-full overflow-hidden">
 	<div class="absolute top-0 left-0 right-0 z-10 p-4 text-center pointer-events-none">
 		<h1 class="mb-2 text-4xl font-bold text-white">Dream World Map</h1>
-		<p class="mb-8 text-indigo-200">Explore the dreamscape...</p>
+		<p class="mb-4 text-indigo-200">Explore the dreamscape...</p>
+		<DreamProgress explored={visitedDreamIds.size} total={data.dreams.length} />
 	</div>
 
 	<!-- Map container -->
@@ -138,6 +164,7 @@
 					index={i}
 					isActive={activeDreamId === dream.id}
 					onClick={handleDreamNodeClick}
+					isRecentlyUnlocked={$recentlyUnlockedDreams.includes(dream.id)}
 				/>
 			{/each}
 
@@ -149,5 +176,9 @@
 
 <!-- Dream event overlay -->
 {#if selectedDream}
-	<DreamEventOverlay dream={selectedDream} onClose={closeDreamEvent} />
+	<DreamEventOverlay
+		dream={selectedDream}
+		onClose={closeDreamEvent}
+		onChoiceSelected={handleChoiceSelected}
+	/>
 {/if}
